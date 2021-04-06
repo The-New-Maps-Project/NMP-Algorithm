@@ -15,6 +15,8 @@ public class Main {
         String filePath = "inputfiles/" + args[1]; // Name of the file
         int districts = Integer.parseInt(args[2]); // # of districts
         double threshold = Double.parseDouble(args[3]);// threshold
-        Calculate c = new Calculate(filePath, districts, threshold, stateName);
+        boolean apd = false;
+        if(args.length>4)  apd = Boolean.parseBoolean(args[4]);
+        Calculate c = new Calculate(filePath, districts, threshold, stateName,apd);
     }
 }

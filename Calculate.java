@@ -124,8 +124,7 @@ public class Calculate {
             return new District(num);
         District d = new District(num);
         // first add the most populous town, and then remove from the allTowns list
-        int mpIndex = findExtremeLocation();
-        System.out.println("MOST extreme: "+allTowns.get(mpIndex));
+        int mpIndex = apd?findExtremeLocation():findMostPopulous();        
         d.addTown(allTowns.get(mpIndex));
         allTowns.remove(mpIndex);
         // then keep on adding the nearest town until passed the threshold;
