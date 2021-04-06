@@ -22,6 +22,7 @@ public class Calculate {
     // totalpop/#districts. it should be less than 1.
     public Calculate(String filename, int districts, double pThreshold, String stateName, boolean apdParam) {
         try {
+            System.out.println(apdParam);
             apd = apdParam;
             //Step 1: Read from the file and put all info into allTowns
             allTowns = new ArrayList<Town>();
@@ -63,7 +64,7 @@ public class Calculate {
 
             //Step 4: Create the districts, one by one.
             allDistricts = new District[districts];
-            double threshold = (apd?pThreshold:1.0) * totalStatePop / districts;
+            double threshold = (apd?1.0:pThreshold) * totalStatePop / districts;
             System.out.println("Population threshold:" + threshold);
             System.out.println("Starting Algorithm\n");
             for (int i = 0; i < allDistricts.length; i++) {
