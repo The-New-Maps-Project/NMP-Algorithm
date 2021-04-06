@@ -45,7 +45,8 @@ class District {
         // }
         String s = "";
         for(Town t:towns){
-            s += "\n" + t.getName() + "," + districtNo+","+t.getLocation().getLat()+","+t.getLocation().getLng()+","+t.getPopulation();
+            String portion = t.getPortion()!=1.0? " ("+(Math.floor(t.getPortion() * 100))+"%) ":"";
+            s += "\n" + t.getName() + portion+"," + districtNo+","+t.getLocation().getLat()+","+t.getLocation().getLng()+","+t.getPopulation();
         }
         return s;
     }
