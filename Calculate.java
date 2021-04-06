@@ -20,8 +20,9 @@ public class Calculate {
 
     // pThreshold, a percentage of when to stop adding towns to district of
     // totalpop/#districts. it should be less than 1.
-    public Calculate(String filename, int districts, double pThreshold, String stateName, boolean apd) {
+    public Calculate(String filename, int districts, double pThreshold, String stateName, boolean apdParam) {
         try {
+            apd = apdParam;
             //Step 1: Read from the file and put all info into allTowns
             allTowns = new ArrayList<Town>();
             double totalStatePop = 0;
