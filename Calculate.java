@@ -63,7 +63,7 @@ public class Calculate {
 
             //Step 4: Create the districts, one by one.
             allDistricts = new District[districts];
-            double threshold = pThreshold * totalStatePop / districts;
+            double threshold = (apd?pThreshold:1.0) * totalStatePop / districts;
             System.out.println("Population threshold:" + threshold);
             System.out.println("Starting Algorithm\n");
             for (int i = 0; i < allDistricts.length; i++) {
