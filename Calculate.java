@@ -2,6 +2,9 @@ import java.util.ArrayList;
 import java.io.File; // Import the File class
 import java.io.FileNotFoundException; // Import this class to handle errors
 import java.util.Scanner; // Import the Scanner class to read text files
+
+// import jdk.internal.jshell.tool.resources.l10n;
+
 import java.util.Arrays;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -12,32 +15,49 @@ public class Calculate {
     private Town[] allTownsFinal; // stores the original list of towns, final variable. Used only for finding
                                   // closest town at the end with leftover towns.
     private District[] allDistricts;
+    private Location center; //the center of population for the whole state.
 
     // pThreshold, a percentage of when to stop adding towns to district of
     // totalpop/#districts. it should be less than 1.
     public Calculate(String filename, int districts, double pThreshold, String stateName) {
         try {
-            // Read from the file and put all info into allTowns
+            //Step 1: Read from the file and put all info into allTowns
             allTowns = new ArrayList<Town>();
             double totalStatePop = 0;
             File myObj = new File(filename);
-            Scanner myReader = new Scanner(myObj);
-            while (myReader.hasNextLine()) {
-                String data = myReader.nextLine();
+            Scanner sc = new Scanner(myObj);
+            while (sc.hasNextLine()) {
+                String data = sc.nextLine();
                 String[] values = data.split(",");
                 allTowns.add(new Town(values[0], Integer.parseInt(values[1].replace(" ", "")),
                         Double.parseDouble(values[2].replace(" ", "")),
                         Double.parseDouble(values[3].replace(" ", ""))));
                 totalStatePop += Integer.parseInt(values[1].replace(" ", ""));
             }
-            myReader.close();
+            sc.close();
+            System.out.println("Done reading File");
+
+            //Step 2: Find total population by creating the allTownsFinal array.
             allTownsFinal = new Town[allTowns.size()];
             for (int i = 0; i < allTowns.size(); i++) {
                 allTownsFinal[i] = allTowns.get(i);
             }
-            System.out.println("Done reading File");
             System.out.println("Calculated Total Population: " + totalStatePop);
 
+            //Step 3: find the center of population
+            int countPop = 0;
+            double totalLat = 0;
+            double totalLng = 0;
+            center = new Location(0.0,0.0);
+            for(Town t: allTowns){
+                totalLat += t.getPopulation()*t.getLocation().getLat();
+                totalLng += t.getPopulation()*t.getLocation().getLng();
+            }
+            center.setLat(totalLat/totalStatePop);
+            center.setLng(totalLng/totalStatePop);
+            System.out.println("CENTER: "+center+"\n");
+
+            //Step 4: Create the districts, one by one.
             allDistricts = new District[districts];
             double threshold = pThreshold * totalStatePop / districts;
             System.out.println("Population threshold:" + threshold);
@@ -101,7 +121,8 @@ public class Calculate {
             return new District(num);
         District d = new District(num);
         // first add the most populous town, and then remove from the allTowns list
-        int mpIndex = findMostPopulous();
+        int mpIndex = findExtremeLocation();
+        System.out.println("MOST extreme: "+allTowns.get(mpIndex));
         d.addTown(allTowns.get(mpIndex));
         allTowns.remove(mpIndex);
         // then keep on adding the nearest town until passed the threshold;
@@ -171,6 +192,20 @@ public class Calculate {
             if (allTowns.get(i).getPopulation() > maxPop) {
                 index = i;
                 maxPop = allTowns.get(i).getPopulation();
+            }
+        }
+        return index;
+    }
+
+    // returns index of the most extreme location of a town int he allTowns arraylist
+    private int findExtremeLocation(){
+        int index = 0;
+        double maxDist = 0.0;
+        for(int i = 0;i<allTowns.size();i++){
+            double dist = allTowns.get(i).getLocation().distTo(center);
+            if (dist > maxDist) {
+                index = i;
+                maxDist = dist;
             }
         }
         return index;
