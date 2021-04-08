@@ -23,7 +23,7 @@ To understand the input of this algorithm, a couple of parameters and requiremen
 ### Parameters
 Values defined to measure the effectiveness of a district grouping
 
-**Compactness:**
+**Compactness:** 
 
 **Population Distribution:**: 
 
