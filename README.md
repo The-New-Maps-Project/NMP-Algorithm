@@ -1,13 +1,12 @@
 # The New Maps Project Redistricting Algorithm v1.2
 
-## Updates: v1.2 
-Effective Aug 31 2020  
-No Breaking Changes  
+## Updates: v2.0
+Effective April 7 2021
+No breaking changes to original algorithm methodology
   
 **Changes:**
-1. All results write to a newly created file in a folder called "results" in the root directory. Files created in a specific format, with the state name, threshold, and time created. See "Retrieve Output Data" below
-2. Prints the number of lines outputted.
-3. Prints version of algorithm when run.
+1. New point-based redistricting model: treats data as a collection of single points, and precincts may be divided amongst different districts. No threshold support as of version 2.0. Read more in algorithm documentation.
+2. Auto runs point based-based redistricting model when input threshold is "0"
 
 
 ## How to use:
@@ -28,7 +27,7 @@ Check the console for lines of print during the algorithm
 
 1. Version of the Algorithm
 2. Calculated total population
-3. Population threshold (total population / districts * threshold %)
+3. Population threshold (total population / districts * threshold %). Input "0" to use the point-based redistricting model
 4. "Starting Algorithm"
 5. Results (will print line count if over 100 lines)
 6. "Successfully Written", with file name in the "results" folder for output, OR "Error".
@@ -54,7 +53,7 @@ Woonsocket,41751,42.00287609999999,-71.51478390000001
 ### Retrieve Output Data: 
 After the algorithm is complete, it will write to a new file in the "results" folder located in the root directory. The Name of this file will be printed in the console if run successfully. (Name of file in the format: State-Threshold---Day of Week-Month-Day-Hours-Minutes-Seconds-Timezone-Year)  
   
-The content of the output file is in the following format: First Line: State name,threshold (as a decimal). Following lines: town name, district #, latitude, longitude, population
+The content of the output file is in the following format: First Line: State name,threshold (as a decimal). Following lines: town name  (% of population if using point-based model), district #, latitude, longitude, population
 
 **Example:**  
     
