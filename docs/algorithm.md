@@ -65,15 +65,27 @@ Step 1: Start with most populous precinct
 
 Since "precincts as one" are required, the optimal way to build districts is to begin each with the most populous precincts and build up to a threshold. This ensures that the most populous district is not added last, and when precincts are being added when the population of a district is close to the threshold, more granular additions can be made to optimize population distribution
 
-Step 2: Add closest precinct
+Step 2: Add closest precinct & Step 3: Repeat until threshold is reached.
 
 With the most populous precinct remaining as the lone precinct in the district, call this precinct A, according to the definition above for the continuity of a district, either two additions can be made at this step. so that the requirement of continuity is satisfied:
 
   1. The closest precinct to precinct A
   2. A precinct whose closest district is precinct A
 
-Sometimes, the same one precinct satisfies both these conditions, in which the optimal solution is to add that precinct. However, when this is not the case, it can be shown that adding closest precinct to precinct A optimizes compactness.
+Sometimes, the same one precinct satisfies both these conditions, in which the optimal solution is to add that precinct. However, when this is not the case, adding the closest precinct to precinct A maximizes compactness.
 
+The overall goal at each step is to minimize the change in position for the center of population of the district that is being built. This maximizes compactness, for the mean distance to the population mean for all individual voters is changed by the minimum amount, which since the population mean is the point where the mean distance from every voter is mimized, changing it by the smallest amount per voter added is the best way to minimize compactness.
+
+Smallest change per voter added is considered instead of smallest change made by adding an entire precinct because there is a fixed threshold population threshold at which the district stops being built after the population reaches that threshold. Therefore, it is best to find the closest voters at each step, so they will contribute less to the mean distance from the center of population, and more to the overall population of the district
+
+
+Considered two precincts: Precinct A - the closest precinct to the district's population mean, and Precinct B - a precinct further from the population mean, but smaller in population size, contributing less to the movement of the population center. If precinct B was added, it may move the population center by a lesser distance, but it leaves more room open for other precincts to be added, while precinct A is closest, and thus has the lower ability to move the district's population mean per voter.
+
+Step 3: Repeat for all districts
+
+Step 4: Add any remaining districts 
+
+Justification for using thresholds: with the limitation of the "precincts as one" requirement, there is an inherent tradeoff between population distribution and likelihood that the districts are continuous. This is why, in real life, districts are not drawn to be exactly equal in population. This also stems from the limitation in input data, where sometimes precincts differ drastically in population size, forcing the algorithm to add these precincts first to a district, and subsequently build a district around it. Consider the scenario where the last district is being drawn, and the threshold is at or near 100% of average district size. There is a likely possibility that the remaining precincts are not continous to the district. However, if the threshold is lowered, than the minimu possible district size can be signifacntly lower than that of the average size, resulting in uneven population distribution. The sleection of the threshold 
 
 
 ### Procedure - Point-Based Model
