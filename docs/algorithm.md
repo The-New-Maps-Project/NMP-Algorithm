@@ -31,12 +31,49 @@ Values defined to measure the effectiveness of a district grouping
 
 ## The Algorithm
 
-### Procedure - Standard Approach
+### Input Data
+
+1. A list of precincts from a text file (.txt) with the following information:
+- Name
+- Geographical location (latitude and longitude of the precinct), as a point on earth
+- Population
+
+Information about the exact boundaries and the exact population distribution or exact location of every individual residing in the precinct is not supported as input into this algorithm. As a result, some important simplifications and assumptions can be made.
+
+NOTE: Sample input files from The New Maps Project (such as those found in the website's datastore) contain coordinates obtained from querying the name of the precinct (and state) with the Google Geocoding API.
+
+2. The number of desired districts to divide the state into
+
+3. A percent threshold as a decimal (Ex: 0.95). This is the percent of the average district size at which the standard model will stop building a district. See the standard model's procedure below. Input "0" to run the point-based model.
+
+### Procedure - Standard Model
 
 1. Start with most populous precinct as it's own new district
-2. Add the closest precinct to the district
-3. Repeat steps 1 & 2 until the district poplation threshold is exceeded. This threshold is a percentage amount of the average district size (Ex: a 90% threshold of a state with 10 districts and 1 million people would be 1,000,000/10 * 0.9 = 90,000)
-4. All remaining precincts go to the district that their closest precinct is in.
+2. Add the closest precinct to the district (the location of the district being the center of population for it)
+3. Repeat step 2 until the district poplation threshold is exceeded. This threshold is a percentage amount of the average district size (Ex: a 90% threshold of a state with 10 districts and 1 million people would be 1,000,000/10 * 0.9 = 90,000)
+4. Repeat steps 1-3 with every district, adding the most populous precinct that has not yet been assigned.
+5. All remaining precincts go to the district that their closest precinct is in.
+
+### Mathematical Explanation - Standard Model
+
+This is a greedy, "district-building" in order approach to draw districts. Listed below are the requirements and the parameters this algorithm seeks to optimize.
+
+**Requirements:** Precincts as One, Continuity of Districts.
+**Parameters to Optimize:** Compactness, Population Distribution.
+
+Step 1: Start with most populous precinct
+
+Since "precincts as one" are required, the optimal way to build districts is to begin each with the most populous precincts and build up to a threshold. This ensures that the most populous district is not added last, and when precincts are being added when the population of a district is close to the threshold, more granular additions can be made to optimize population distribution
+
+Step 2: Add closest precinct
+
+With the most populous precinct remaining as the lone precinct in the district, call this precinct A, according to the definition above for the continuity of a district, either two additions can be made at this step. so that the requirement of continuity is satisfied:
+
+  1. The closest precinct to precinct A
+  2. A precinct whose closest district is precinct A
+
+Sometimes, the same one precinct satisfies both these conditions, in which the optimal solution is to add that precinct. However, when this is not the case, it can be shown that adding closest precinct to precinct A optimizes compactness.
+
 
 
 ### Procedure - Point-Based Model
@@ -46,6 +83,12 @@ Values defined to measure the effectiveness of a district grouping
 4. Repeat steps 1 and 2 for every district
 
 Please Note: Due to the assumption made in Step 2, optimizations are made in the code. For example, this leads to precinct being divided up between district, and the algorithm output may specify the percentage of the population in a precinct assigned to each district.
+
+### Output Data
+
+A list of precincts, with all the input data, each assigned to a precinct, numbered 1 ... N, where N is the number of districts inputed into the algorithm.
+
+If running the point-based model, and some precincts are dividing between districts, different portions of a precinct will be listed separately, assigned to their respective districts and denoting the percent of the population of the original precinct assigned to that district.
 
 
 
