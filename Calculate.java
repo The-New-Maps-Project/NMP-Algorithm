@@ -2,6 +2,9 @@ import java.util.ArrayList;
 import java.io.File; // Import the File class
 import java.io.FileNotFoundException; // Import this class to handle errors
 import java.util.Scanner; // Import the Scanner class to read text files
+
+// import jdk.internal.jshell.tool.resources.l10n;
+
 import java.util.Arrays;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -12,34 +15,56 @@ public class Calculate {
     private Town[] allTownsFinal; // stores the original list of towns, final variable. Used only for finding
                                   // closest town at the end with leftover towns.
     private District[] allDistricts;
+    private Location center; //the center of population for the whole state.
+    private boolean apd;
 
     // pThreshold, a percentage of when to stop adding towns to district of
     // totalpop/#districts. it should be less than 1.
-    public Calculate(String filename, int districts, double pThreshold, String stateName) {
+    public Calculate(String filename, int districts, double pThreshold, String stateName, boolean apdParam) {
         try {
-            // Read from the file and put all info into allTowns
+            System.out.println(apdParam);
+            apd = apdParam;
+            //Step 1: Read from the file and put all info into allTowns
             allTowns = new ArrayList<Town>();
             double totalStatePop = 0;
             File myObj = new File(filename);
-            Scanner myReader = new Scanner(myObj);
-            while (myReader.hasNextLine()) {
-                String data = myReader.nextLine();
+            Scanner sc = new Scanner(myObj);
+            int idCount = 1;
+            while (sc.hasNextLine()) {
+                String data = sc.nextLine();
                 String[] values = data.split(",");
                 allTowns.add(new Town(values[0], Integer.parseInt(values[1].replace(" ", "")),
                         Double.parseDouble(values[2].replace(" ", "")),
-                        Double.parseDouble(values[3].replace(" ", ""))));
+                        Double.parseDouble(values[3].replace(" ", "")),idCount,1.0));
                 totalStatePop += Integer.parseInt(values[1].replace(" ", ""));
+                idCount++;
             }
-            myReader.close();
+            sc.close();
+            System.out.println("Done reading File");
+
+            //Step 2: Find total population by creating the allTownsFinal array.
             allTownsFinal = new Town[allTowns.size()];
             for (int i = 0; i < allTowns.size(); i++) {
-                allTownsFinal[i] = allTowns.get(i);
+                allTownsFinal[i] = new Town(allTowns.get(i)); //MUST create a clone, because if using partial towns, when the population changes in the arraylist, the total pop in the array should remain the same
             }
-            System.out.println("Done reading File");
             System.out.println("Calculated Total Population: " + totalStatePop);
 
+            //Step 3: find the center of population
+            int countPop = 0;
+            double totalLat = 0;
+            double totalLng = 0;
+            center = new Location(0.0,0.0);
+            for(Town t: allTowns){
+                totalLat += t.getPopulation()*t.getLocation().getLat();
+                totalLng += t.getPopulation()*t.getLocation().getLng();
+            }
+            center.setLat(totalLat/totalStatePop);
+            center.setLng(totalLng/totalStatePop);
+            System.out.println("CENTER: "+center+"\n");
+
+            //Step 4: Create the districts, one by one.
             allDistricts = new District[districts];
-            double threshold = pThreshold * totalStatePop / districts;
+            double threshold = (apd?1.0:pThreshold) * totalStatePop / districts;
             System.out.println("Population threshold:" + threshold);
             System.out.println("Starting Algorithm\n");
             for (int i = 0; i < allDistricts.length; i++) {
@@ -101,7 +126,7 @@ public class Calculate {
             return new District(num);
         District d = new District(num);
         // first add the most populous town, and then remove from the allTowns list
-        int mpIndex = findMostPopulous();
+        int mpIndex = apd?findExtremeLocation():findMostPopulous();        
         d.addTown(allTowns.get(mpIndex));
         allTowns.remove(mpIndex);
         // then keep on adding the nearest town until passed the threshold;
@@ -110,9 +135,28 @@ public class Calculate {
             // System.out.println(threshold);
             // System.out.println(allTowns.size());
             int index = findClosest(d);
-            d.addTown(allTowns.get(index));
+            Town closestTown = allTowns.get(index);
+            //Do a special check to see if you need to split a town
+            if(apd&&d.getTotalPop()+closestTown.getPopulation()>threshold){
+                
+                int portion =  (int)Math.floor(threshold)-d.getTotalPop(); //exactly how many people you need to get to the threshold.
+                int remaining = closestTown.getPopulation() - portion;
+                int totalPop = (findTownTotalPop(closestTown.getId()));
+                //NOTE: portionPercent and remainingPercent may not add to 100%, because a really large city can be divided between 3 or more districts.
+                double portionPercent = (double)portion/(double)totalPop;
+                double remainingPercent = (double)remaining/(double)totalPop;
+                //must create a new instance, because it is like dividing the town into two.
+                d.addTown(new Town(closestTown.getName(),portion,closestTown.getLocation().getLat(),closestTown.getLocation().getLng(),closestTown.getId(),portionPercent));
+                closestTown.setPopulation(remaining); //the remaining population can be in another district, don't delete
+                closestTown.setPortion(remainingPercent);
+                break; //break because this can cause an infinite loop due to rounding of the threshold.
+            }else{ //otherwise, normally add the town.
+                d.addTown(closestTown);
+                allTowns.remove(index);
+            }
+            
             // System.out.println("-+"+allTowns.get(index).getPopulation());
-            allTowns.remove(index);
+            
         }
         return d;
     }
@@ -174,6 +218,30 @@ public class Calculate {
             }
         }
         return index;
+    }
+
+    // returns index of the most extreme location of a town int he allTowns arraylist
+    private int findExtremeLocation(){
+        int index = 0;
+        double maxDist = 0.0;
+        for(int i = 0;i<allTowns.size();i++){
+            double dist = allTowns.get(i).getLocation().distTo(center);
+            if (dist > maxDist) {
+                index = i;
+                maxDist = dist;
+            }
+        }
+        return index;
+    }
+
+
+    // returns total population of the town at the start
+    // used for dividing partial towns
+    private int findTownTotalPop(int id){
+        for(Town t: allTownsFinal){
+            if(t.getId()==id) return t.getPopulation();
+        }
+        return 0;
     }
 
 }
